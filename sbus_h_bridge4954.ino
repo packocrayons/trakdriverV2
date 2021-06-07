@@ -15,7 +15,7 @@
 #define MOTOR_RIGHT 1
 
 #define NUM_MOTORS 2
-#define NUM_USED_CHANNELS 3
+#define NUM_USED_CHANNELS 4
 #define LED_CHANNEL 3
 
 #define ADMUX_VAL 0000
@@ -24,9 +24,9 @@
 
 //mixing is done in the channel order (TAER, but in this case TA[SW1]) and is a (float) multiplier of how much that channels' variance from 0 affects the motor (basic multiwii mixing)
 //TODO: read the betaflight code because those guys actually know how to write code
-#define M0_MMIX {1, 1, 0}
-#define M1_MMIX {-1, 1, 0}
-#define L_MMIX { 0, 0, 1}
+#define M0_MMIX {1, 1, 0, 0}
+#define M1_MMIX {-1, 1, 0, 0}
+#define L_MMIX { 0, 0, 1, 0}
 
 int ledToggle = 1;
 int interrupted = 0;
@@ -139,14 +139,14 @@ void loop() {
       exit_lpm();
     }
   }
-//  Serial3.println(r);
   if (!r){ // 0 is success
     PORTA &= ~(1 << STATUS_LED_PIN);
     lastGoodPacketTime = milliseconds;
     (RX_PROCESS_CHANNELS(serdata, channels));
     mixmotor(&motors[0], channels);
     mixmotor(&motors[1], channels);
-    mixmotor(&led, channels);    
+    mixmotor(&led, channels);
+    do_lpm(channels);    
   }
   if (millis_tick){
     do_millis_tick();
