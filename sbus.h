@@ -19,9 +19,9 @@
 #define RANGE_MAX 800
 #define RANGE_MIN -800
 #define RANGE_MID 0
-#define SBUS_SERIAL Serial1
+#define SBUS_SERIAL Serial2
 
-//#define DEBUG
+#define DEBUG_SERIAL Serial1
 
 void sbus_init();
 int get_sbus_data(char bytes[]);

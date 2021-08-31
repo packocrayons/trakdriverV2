@@ -2,15 +2,15 @@
 #include <Arduino.h>
 
 void sbus_init(){
-	Serial1.begin(SBUS_BAUDRATE, SERIAL_8N2);
+	SBUS_SERIAL.begin(SBUS_BAUDRATE, SERIAL_8N2);
 //	Serial1.flush();
 }
 
 int get_sbus_data(char bytes[]){
   static uint16_t serial_pointer = 0;
 	char c;
-	while(Serial1.available()){
-		c = (char)(Serial1.read() & 0xFF);
+	while(SBUS_SERIAL.available()){
+		c = (char)(SBUS_SERIAL.read() & 0xFF);
 		if (serial_pointer == 0){
 			if ((c & 0xFF) != SBUS_HEADER){ //we're at zero, if it's not the header, we might lose an entire frame, but we just keep crashing until the next header comes around
 				return -1;
@@ -20,7 +20,7 @@ int get_sbus_data(char bytes[]){
 		} else {
 			if (serial_pointer < (SBUS_FRAME_LENGTH - 1)){
 				bytes[serial_pointer - 1] = c;
-//        Serial3.print(serial_pointer - 1);
+//        .print(serial_pointer - 1);
 //        Serial3.println((int) bytes[serial_pointer] & 0xFF, BIN);
         serial_pointer++;
 			} else {
@@ -58,8 +58,8 @@ int sbus_process_channels(char serdata[], uint16_t* channels){
       channels[16] = serdata[22] & 0xFF & SBUS_CH17;
       /* Channel 18 */
       channels[17] = serdata[22] & 0xFF & SBUS_CH18;
-//      for (int i = 0; i < 1; ++i){
-//        Serial3.print(i); Serial3.print(" : "); Serial3.println(channels[i], DEC);
-//      }
+      for (int i = 0; i < 4; ++i){
+        DEBUG_SERIAL.print(i); DEBUG_SERIAL.print(" : "); DEBUG_SERIAL.println(channels[i], DEC);
+      }
       return 0; //at the moment, this is blind
 }

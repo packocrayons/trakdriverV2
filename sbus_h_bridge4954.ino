@@ -4,6 +4,7 @@
 //#include <stdint.h>
 /*Hello I'm brydon gibson and ~~I cheated and used someone else's library but I promise I did all the other stuff myself~~ fuck it I'll do it myself*/
 
+
 #define RX_GET_DATA get_sbus_data
 #define RX_PROCESS_CHANNELS sbus_process_channels
 #define RX_INIT sbus_init
@@ -21,6 +22,7 @@
 #define ADMUX_VAL 0000
 
 #define STATUS_LED_PIN PA0
+#define HBRIDGE_ENABLE PD1 
 
 //mixing is done in the channel order (TAER, but in this case TA[SW1]) and is a (float) multiplier of how much that channels' variance from 0 affects the motor (basic multiwii mixing)
 //TODO: read the betaflight code because those guys actually know how to write code
@@ -54,7 +56,7 @@ void init_timers(){
   TCCR3A = 0;
   TCCR3B = (1 << CS30); //8 clock cycles to process the overflow interrupt. might get some jitter
   TIMSK3 = (1 << TOIE3) | (1 << OCIE3A) | (1 << OCIE3B) | (1 << OCIE3C);
-  init_lpm_tick();
+  //init_lpm_tick();
 }
 
 void init_adc(char admux_val){
@@ -71,6 +73,7 @@ void setup() {
   for (int i = 0; i < 2; ++i){
     DDRD |= (1 << motors[i].in1) | (1 << motors[i].in2); //only works for motors on portd
   };
+  DDRD |= (1 << HBRIDGE_ENABLE);
   DDRB |= (1 << led.in1);
   DDRA |= (1 << STATUS_LED_PIN);
    
@@ -79,13 +82,14 @@ void setup() {
   init_adc(ADMUX_VAL);
   RX_INIT();
   sei();
-  Serial2.begin(115200);
-  Serial2.println("beep boop, I'm a tank");
-  PORTA &= ~(1 << STATUS_LED_PIN);
-  delay(1000);
+  DEBUG_SERIAL.begin(115200);
+  DEBUG_SERIAL.println("beep boop, I'm a tank");
+//  PORTA &= ~(1 << STATUS_LED_PIN);
+//  delay(1000);
   PORTA |= (1 << STATUS_LED_PIN);
-  delay(1000);
-  PORTA &= ~(1 << STATUS_LED_PIN);  
+//  delay(1000);
+  //PORTA &= ~(1 << STATUS_LED_PIN);
+  PORTD |= (1 << HBRIDGE_ENABLE);  
 }
 
 void do_millis_tick(){
@@ -131,14 +135,14 @@ int r;
 int lastGoodPacketTime;
 void loop() {
   r = RX_GET_DATA(serdata);
-  if (lastGoodPacketTime - milliseconds > 4000){
-    if (r) {
-      PORTA |= (1 << STATUS_LED_PIN);
-      enter_lpm(LPM_NOSIGNAL);
-    } else {
-      exit_lpm();
-    }
-  }
+//  if (lastGoodPacketTime - milliseconds > 4000){
+//    if (r) {
+//      PORTA |= (1 << STATUS_LED_PIN);
+//      enter_lpm(LPM_NOSIGNAL);
+//    } else {
+//      exit_lpm();
+//    }
+//  }
   if (!r){ // 0 is success
     PORTA &= ~(1 << STATUS_LED_PIN);
     lastGoodPacketTime = milliseconds;
@@ -146,7 +150,7 @@ void loop() {
     mixmotor(&motors[0], channels);
     mixmotor(&motors[1], channels);
     mixmotor(&led, channels);
-    do_lpm(channels);    
+//    do_lpm(channels);    
   }
   if (millis_tick){
     do_millis_tick();
